@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eDEX UI - lemmer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+
+        body {
+            background-color: #0a0a1a;
+            color: #00ffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Tampilan Login & Register */
+        #auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #050510, #0a1a2a);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .logo {
+            margin-bottom: 2rem;
+            text-align: center;
+            font-size: 2.5rem;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; text-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff; }
+            100% { opacity: 0.8; }
+        }
+
+        .auth-form {
+            background-color: rgba(10, 15, 30, 0.8);
+            padding: 2rem;
+            border: 1px solid #00aaff;
+            border-radius: 5px;
+            width: 300px;
+            box-shadow: 0 0 15px rgba(0, 170, 255, 0.5);
+        }
+
+        .auth-form h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #00aaff;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: rgba(15, 25, 45, 0.8);
+            border: 1px solid #0088ff;
+            color: #00ffff;
+            border-radius: 3px;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.7rem;
+            background-color: #0066ff;
+            color: #ffffff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            text-shadow: 0 0 5px #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #0088ff;
+            box-shadow: 0 0 10px #0088ff;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 1rem;
+            color: #00aaff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* Tampilan Terminal */
+        #terminal {
+            display: none;
+            padding: 20px;
+            height: 100vh;
+            overflow-y: auto;
+            background-color: #050510;
+        }
+
+        .terminal-header {
+            margin-bottom: 1rem;
+            color: #00aaff;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #0088ff;
+            padding-bottom: 0.5rem;
+            text-shadow: 0 0 5px #00aaff;
+        }
+
+        .output {
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .prompt {
+            color: #00ffff;
+            margin-right: 10px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        #command-input {
+            flex-grow: 1;
+            background-color: transparent;
+            border: none;
+            color: #00ffff;
+            font-size: 1rem;
+            outline: none;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        /* Tampilan eDEX UI */
+        #edex-ui {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #050510;
+            color: #00ffff;
+            z-index: 50;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .matrix-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .edex-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .edex-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100% - 100px);
+        }
+
+        .panel {
+            background-color: rgba(10, 20, 40, 0.5);
+            border: 1px solid #0088ff;
+            border-radius: 5px;
+            padding: 10px;
+            overflow: auto;
+            box-shadow: 0 0 10px rgba(0, 136, 255, 0.3);
+        }
+
+        .panel-title {
+            border-bottom: 1px solid #0088ff;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            color: #00aaff;
+            text-shadow: 0 0 5px #00aaff;
+        }
+
+        .system-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #0088ff;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #0088ff;
+            left: 0;
+            text-shadow: 0 0 3px #0088ff;
+        }
+
+        /* Animasi Ketikan */
+        .typing-animation {
+            overflow: hidden;
+            border-right: 2px solid #00ffff;
+            white-space: nowrap;
+            margin: 0 auto;
+            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #00ffff }
+        }
+
+        /* Tampilan External Notes */
+        #external-notes {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 600px;
+            background-color: rgba(10, 15, 30, 0.95);
+            border: 2px solid #0088ff;
+            border-radius: 10px;
+            padding: 20px;
+            z-index: 200;
+            box-shadow: 0 0 20px rgba(0, 136, 255, 0.5);
+            color: #00ffff;
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #0088ff;
+        }
+
+        .notes-header h2 {
+            color: #00aaff;
+            text-shadow: 0 0 5px #00aaff;
+        }
+
+        #close-notes {
+            background: none;
+            border: none;
+            color: #00ffff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: auto;
+        }
+
+        #notes-content {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        #notes-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #notes-content::-webkit-scrollbar-thumb {
+            background-color: #0088ff;
+            border-radius: 5px;
+        }
+
+        /* Responsif */
+        @media (max-width: 768px) {
+            .edex-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .auth-form {
+                width: 90%;
+            }
+            
+            #external-notes {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Layar Login & Register -->
+    <div id="auth-screen">
+        <div class="logo">eDEX UI</div>
+        <div class="auth-form" id="login-form">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Masukkan username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Masukkan password">
+            </div>
+            <button id="login-btn">Login</button>
+            <div class="auth-switch" id="show-register">Belum punya akun? Daftar di sini</div>
+        </div>
+
+        <div class="auth-form" id="register-form" style="display: none;">
+            <h2>Buat Akun Baru</h2>
+            <div class="form-group">
+                <label for="new-username">Username</label>
+                <input type="text" id="new-username" placeholder="Buat username">
+            </div>
+            <div class="form-group">
+                <label for="new-password">Password</label>
+                <input type="password" id="new-password" placeholder="Buat password">
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Konfirmasi Password</label>
+                <input type="password" id="confirm-password" placeholder="Konfirmasi password">
+            </div>
+            <button id="register-btn">Daftar</button>
+            <div class="auth-switch" id="show-login">Sudah punya akun? Login di sini</div>
+        </div>
+    </div>
+
+    <!-- Terminal -->
+    <div id="terminal">
+        <div class="terminal-header">
+            eDEX UI Terminal - Ketik '/help' untuk melihat daftar perintah
+        </div>
+        <div class="output" id="output">
+            <div>Selamat datang di eDEX UI Terminal!</div>
+            <div>Gunakan command yang tersedia untuk berinteraksi dengan sistem.</div>
+        </div>
+        <div class="input-line">
+            <span class="prompt">$</span>
+            <input type="text" id="command-input" autocomplete="off">
+        </div>
+    </div>
+
+    <!-- Tampilan eDEX UI -->
+    <div id="edex-ui">
+        <canvas class="matrix-background" id="matrix-canvas"></canvas>
+        <div class="edex-header">
+            <div>eDEX UI - Neon Blue Edition</div>
+            <div id="system-time">00:00:00</div>
+        </div>
+        <div class="edex-content">
+            <div class="panel">
+                <div class="panel-title">System Info</div>
+                <div class="system-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">CPU Usage</div>
+                        <div class="stat-value" id="cpu-usage">0%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Memory Usage</div>
+                        <div class="stat-value" id="memory-usage">0%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Disk Usage</div>
+                        <div class="stat-value" id="disk-usage">0%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Network</div>
+                        <div class="stat-value" id="network-usage">0 KB/s</div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-title">Processes</div>
+                <div id="process-list">
+                    <div>No active processes</div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-title">File System</div>
+                <div id="file-system">
+                    <div>/home/user</div>
+                    <div>├── Documents</div>
+                    <div>├── Downloads</div>
+                    <div>├── Music</div>
+                    <div>└── Pictures</div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-title">Network</div>
+                <div id="network-info">
+                    <div>Active connections: 0</div>
+                    <div>Upload: 0 KB/s</div>
+                    <div>Download: 0 KB/s</div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">® Copyright - By junzXvoid</div>
+    </div>
+
+    <!-- External Notes Window -->
+    <div id="external-notes">
+        <div class="notes-header">
+            <h2>External Notes</h2>
+            <button id="close-notes">&times;</button>
+        </div>
+        <div id="notes-content">
+            <!-- Konten catatan akan dimuat di sini -->
+        </div>
+    </div>
+
+    <script>
+        // Data untuk external notes
+        const externalNotesData = {
+            android: `
+                <h3>Android Tutorial</h3>
+                <p>Berikut adalah panduan penggunaan eDEX UI di Android:</p>
+                <ol>
+                    <li>Pastikan perangkat Android Anda mendukung browser modern</li>
+                    <li>Buka aplikasi browser dan akses eDEX UI</li>
+                    <li>Gunakan command khusus Android:
+                        <ul>
+                            <li><code>/android install</code> - Install aplikasi</li>
+                            <li><code>/android root</code> - Mode root (perangkat ter-root)</li>
+                            <li><code>/android sensors</code> - Monitor sensor perangkat</li>
+                            <li><code>/android info</code> - Info perangkat Android</li>
+                        </ul>
+                    </li>
+                    <li>Gunakan sentuhan untuk berinteraksi dengan antarmuka</li>
+                </ol>
+                <p>Fitur khusus Android telah dioptimalkan untuk touchscreen!</p>
+            `,
+            windows: `
+                <h3>Windows Tutorial</h3>
+                <p>Berikut adalah panduan penggunaan eDEX UI di Windows:</p>
+                <ol>
+                    <li>Pastikan Windows 10 atau yang lebih baru</li>
+                    <li>Gunakan command khusus Windows:
+                        <ul>
+                            <li><code>/windows system</code> - Info sistem Windows</li>
+                            <li><code>/windows registry</code> - Akses registry (hati-hati)</li>
+                            <li><code>/windows apps</code> - Kelola aplikasi</li>
+                            <li><code>/windows update</code> - Cek pembaruan Windows</li>
+                        </ul>
+                    </li>
+                    <li>Gunakan shortcut keyboard untuk navigasi cepat</li>
+                </ol>
+            `,
+            linux: `
+                <h3>Linux Tutorial</h3>
+                <p>Berikut adalah panduan penggunaan eDEX UI di Linux:</p>
+                <ol>
+                    <li>Kompatibel dengan berbagai distro Linux</li>
+                    <li>Gunakan command khusus Linux:
+                        <ul>
+                            <li><code>/linux terminal</code> - Akses terminal Linux langsung</li>
+                            <li><code>/linux packages</code> - Kelola paket</li>
+                            <li><code>/linux services</code> - Kelola service</li>
+                            <li><code>/linux distro</code> - Info distro Linux</li>
+                        </ul>
+                    </li>
+                    <li>Gunakan command Linux biasa di dalam eDEX UI</li>
+                </ol>
+            `,
+            pc: `
+                <h3>PC Tutorial</h3>
+                <p>Berikut adalah panduan penggunaan eDEX UI di PC:</p>
+                <ol>
+                    <li>Optimalkan untuk penggunaan dengan keyboard</li>
+                    <li>Gunakan command khusus PC:
+                        <ul>
+                            <li><code>/pc performance</code> - Monitor performa PC</li>
+                            <li><code>/pc drivers</code> - Info driver hardware</li>
+                            <li><code>/pc overclock</code> - Tool overclocking (advanced)</li>
+                            <li><code>/pc benchmark</code> - Tes performa PC</li>
+                        </ul>
+                    </li>
+                    <li>Manfaatkan resolusi tinggi untuk pengalaman terbaik</li>
+                </ol>
+            `,
+            tutorial: `
+                <h3>General Tutorial</h3>
+                <p>Selamat datang di eDEX UI! Berikut adalah panduan umum:</p>
+                <ol>
+                    <li>Gunakan command <code>/help</code> untuk melihat semua command yang tersedia</li>
+                    <li>Command khusus platform:
+                        <ul>
+                            <li><code>/android</code> - Fitur khusus Android</li>
+                            <li><code>/windows</code> - Fitur khusus Windows</li>
+                            <li><code>/linux</code> - Fitur khusus Linux</li>
+                            <li><code>/pc</code> - Fitur khusus PC</li>
+                        </ul>
+                    </li>
+                    <li>Gunakan <code>/start ui</code> untuk masuk ke antarmuka visual</li>
+                    <li>Gunakan <code>/about</code> untuk informasi tentang eDEX UI</li>
+                    <li>Gunakan <code>/tutorial</code> untuk melihat panduan ini lagi</li>
+                    <li>Semua aktivitas dicatat dalam external notes</li>
+                </ol>
+                <p>Selamat mengeksplorasi!</p>
+            `
+        };
+
+        // Inisialisasi
+        let activityLog = [];
+        let userAccounts = {};
+
+        // Elemen DOM
+        const authScreen = document.getElementById('auth-screen');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showRegisterBtn = document.getElementById('show-register');
+        const showLoginBtn = document.getElementById('show-login');
+        const terminal = document.getElementById('terminal');
+        const edexUi = document.getElementById('edex-ui');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const newUsernameInput = document.getElementById('new-username');
+        const newPasswordInput = document.getElementById('new-password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const commandInput = document.getElementById('command-input');
+        const output = document.getElementById('output');
+        const systemTime = document.getElementById('system-time');
+        const cpuUsage = document.getElementById('cpu-usage');
+        const memoryUsage = document.getElementById('memory-usage');
+        const diskUsage = document.getElementById('disk-usage');
